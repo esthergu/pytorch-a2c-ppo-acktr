@@ -14,6 +14,7 @@ class PPO():
                  entropy_coef,
                  lr=None,
                  eps=None,
+                 beta=None,
                  max_grad_norm=None,
                  use_clipped_value_loss=True):
 
@@ -28,6 +29,9 @@ class PPO():
 
         self.max_grad_norm = max_grad_norm
         self.use_clipped_value_loss = use_clipped_value_loss
+
+        # ?
+        self.beta = beta
 
         self.optimizer = optim.Adam(actor_critic.parameters(), lr=lr, eps=eps)
 
@@ -54,15 +58,34 @@ class PPO():
                         adv_targ = sample
 
                 # Reshape to do in a single forward pass for all steps
-                values, action_log_probs, dist_entropy, _ = self.actor_critic.evaluate_actions(
+                # values, action_log_probs, dist_entropy, _ = self.actor_critic.evaluate_actions(
+                #     obs_batch, recurrent_hidden_states_batch,
+                #     masks_batch, actions_batch)
+                # ratio = torch.exp(action_log_probs - old_action_log_probs_batch)
+                # surr1 = ratio * adv_targ
+                # surr2 = torch.clamp(ratio, 1.0 - self.clip_param,
+                #                            1.0 + self.clip_param) * adv_targ
+                # action_loss = -torch.min(surr1, surr2).mean()
+
+                values, action_log_probs_t, action_log_probs_r, dist_entropy, kl = self.actor_critic.evalute_actions_vib(
                     obs_batch, recurrent_hidden_states_batch,
                     masks_batch, actions_batch)
 
-                ratio = torch.exp(action_log_probs - old_action_log_probs_batch)
-                surr1 = ratio * adv_targ
-                surr2 = torch.clamp(ratio, 1.0 - self.clip_param,
+                kl = kl.mean()
+                print("debug")
+                print(kl)
+
+                ratio_t = torch.exp(action_log_probs_t - old_action_log_probs_batch)
+                ratio_r = torch.exp(action_log_probs_r - old_action_log_probs_batch)
+                surr1_t = ratio_t * adv_targ
+                surr2_t = torch.clamp(ratio_t, 1.0 - self.clip_param,
                                            1.0 + self.clip_param) * adv_targ
-                action_loss = -torch.min(surr1, surr2).mean()
+                surr1_r = ratio_r * adv_targ
+                surr2_r = torch.clamp(ratio_r, 1.0 - self.clip_param,
+                                           1.0 + self.clip_param) * adv_targ
+                action_loss_t = -torch.min(surr1_t, surr2_t).mean()
+                action_loss_r = -torch.min(surr1_r, surr2_r).mean()
+                action_loss = (action_loss_t + action_loss_r) / 2.
 
                 if self.use_clipped_value_loss:
                     value_pred_clipped = value_preds_batch + \
@@ -74,8 +97,11 @@ class PPO():
                     value_loss = 0.5 * (return_batch - values).pow(2).mean()
 
                 self.optimizer.zero_grad()
+                # (value_loss * self.value_loss_coef + action_loss -
+                #  dist_entropy * self.entropy_coef).backward()
+                # TEST!!!!!!!!!!!
                 (value_loss * self.value_loss_coef + action_loss -
-                 dist_entropy * self.entropy_coef).backward()
+                 dist_entropy * self.entropy_coef + self.beta * kl).backward()
                 nn.utils.clip_grad_norm_(self.actor_critic.parameters(),
                                          self.max_grad_norm)
                 self.optimizer.step()

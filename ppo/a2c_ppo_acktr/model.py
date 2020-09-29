@@ -48,11 +48,12 @@ class Policy(nn.Module):
         """Size of rnn_hx."""
         return self.base.recurrent_hidden_state_size
 
-    def forward(self, inputs, rnn_hxs, masks):
+    def forward(self, inputs, rnn_hxs, masks, vib):
         raise NotImplementedError
 
     def act(self, inputs, rnn_hxs, masks, deterministic=False):
-        value, actor_features, rnn_hxs = self.base(inputs, rnn_hxs, masks)
+        # VIB mode
+        value, actor_features, rnn_hxs = self.base(inputs, rnn_hxs, masks, True)
         dist = self.dist(actor_features)
 
         if deterministic:
@@ -66,17 +67,36 @@ class Policy(nn.Module):
         return value, action, action_log_probs, rnn_hxs
 
     def get_value(self, inputs, rnn_hxs, masks):
-        value, _, _ = self.base(inputs, rnn_hxs, masks)
+        # VIB mode
+        value, _, _ = self.base(inputs, rnn_hxs, masks, True)
         return value
 
     def evaluate_actions(self, inputs, rnn_hxs, masks, action):
-        value, actor_features, rnn_hxs = self.base(inputs, rnn_hxs, masks)
+        value, actor_features, rnn_hxs = self.base(inputs, rnn_hxs, masks, False)
         dist = self.dist(actor_features)
 
         action_log_probs = dist.log_probs(action)
         dist_entropy = dist.entropy().mean()
 
         return value, action_log_probs, dist_entropy, rnn_hxs
+
+    def evalute_actions_vib(self, inputs, rnn_hxs, masks, action):
+        # Train
+        _, actor_features_train, _ = self.base(inputs, rnn_hxs, masks, False)
+        dist_train = self.dist(actor_features_train)
+        action_log_probs_t = dist_train.log_probs(action)
+        dist_train_entropy = dist_train.entropy().mean()
+
+        # Run
+        value, actor_features_run, rnn_hxs_run = self.base(inputs, rnn_hxs, masks, True)
+        dist_run = self.dist(actor_features_run)
+
+        action_log_probs_r = dist_run.log_probs(action)
+        dist_run_entropy = dist_run.entropy().mean()
+
+        dist_entropy = (dist_train_entropy+dist_run_entropy)/2.
+
+        return value, action_log_probs_t, action_log_probs_r, dist_entropy, rnn_hxs
 
 
 class NNBase(nn.Module):
@@ -191,6 +211,8 @@ class CNNBase(NNBase):
             nn.ReLU()
         )
 
+        self.dropout_layer = nn.Dropout(p=0.1, inplace=False)
+
         init_ = lambda m: init(m,
             nn.init.orthogonal_,
             lambda x: nn.init.constant_(x, 0))
@@ -199,11 +221,12 @@ class CNNBase(NNBase):
 
         self.train()
 
-    def forward(self, inputs, rnn_hxs, masks):
+    def forward(self, inputs, rnn_hxs, masks, vib):
         x = self.main(inputs / 255.0)
-
+        if vib:
+            x = self.dropout_layer(x)
         if self.is_recurrent:
-            x, rnn_hxs = self._forward_gru(x, rnn_hxs, masks)
+            x, rnn_hxs = self._forward_gru(x, rnn_hxs, masks)    
 
         return self.critic_linear(x), x, rnn_hxs
 
@@ -235,12 +258,14 @@ class MLPBase(NNBase):
         )
 
         self.critic_linear = init_(nn.Linear(hidden_size, 1))
+        self.dropout_layer = nn.Dropout(p=0.1, inplace=False)
 
         self.train()
 
-    def forward(self, inputs, rnn_hxs, masks):
+    def forward(self, inputs, rnn_hxs, masks, vib):
         x = inputs
-
+        if vib:
+            x = self.dropout_layer(x)
         if self.is_recurrent:
             x, rnn_hxs = self._forward_gru(x, rnn_hxs, masks)
 

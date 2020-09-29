@@ -59,6 +59,51 @@ except OSError:
     except PermissionError as e:
         pass
 
+# def arpl_perturb(obs, phi=phi, epsilon=epsilon):
+#     flag = np.float(np.random.choice([0, 1], p=[1-phi, phi]))
+#     perturbed_obs = obs
+#     if flag:
+#         obs_grad = get_arpl_grad(obs)
+#         perturbed_obs = obs + epsilon*obs_grad.numpy()[0]
+#     return perturbed_obs
+
+
+# def fgsm(self, x, y, targeted=False, eps=0.03, x_val_min=-1, x_val_max=1):
+#         x_adv = Variable(x.data, requires_grad=True)
+#         h_adv = self.net(x_adv)
+#         if targeted:
+#             cost = self.criterion(h_adv, y)
+#         else:
+#             cost = -self.criterion(h_adv, y)
+
+#         self.net.zero_grad()
+#         if x_adv.grad is not None:
+#             x_adv.grad.data.fill_(0)
+#         cost.backward()
+
+#         x_adv.grad.sign_()
+#         x_adv = x_adv - eps*x_adv.grad
+#         x_adv = torch.clamp(x_adv, x_val_min, x_val_max)
+
+
+#         h = self.net(x)
+#         h_adv = self.net(x_adv)
+
+#         return x_adv, h_adv, h
+
+
+# def get_arpl_grad(obs):
+#     obs_tensor = torch.tensor([obs], requires_grad=True)
+#     print(obs_tensor)
+#     mean_arpl, _ = po
+#     cost = self.criterion
+
+#     # .backward()
+#     return obs_tensor.grad
+
+
+
+
 def main():
     torch.set_num_threads(1)
     device = torch.device("cuda:0" if args.cuda else "cpu")
@@ -129,16 +174,16 @@ def main():
         if dual_robots:
             agent_robot1 = algo.PPO(actor_critic_robot1, args.clip_param, args.ppo_epoch, args.num_mini_batch,
                              args.value_loss_coef, args.entropy_coef, lr=args.lr,
-                                   eps=args.eps,
+                                   eps=args.eps, beta=args.beta,
                                    max_grad_norm=args.max_grad_norm)
             agent_robot2 = algo.PPO(actor_critic_robot2, args.clip_param, args.ppo_epoch, args.num_mini_batch,
                              args.value_loss_coef, args.entropy_coef, lr=args.lr,
-                                   eps=args.eps,
+                                   eps=args.eps, beta=args.beta,
                                    max_grad_norm=args.max_grad_norm)
         else:
             agent = algo.PPO(actor_critic, args.clip_param, args.ppo_epoch, args.num_mini_batch,
                              args.value_loss_coef, args.entropy_coef, lr=args.lr,
-                                   eps=args.eps,
+                                   eps=args.eps, beta=args.beta,
                                    max_grad_norm=args.max_grad_norm)
     elif args.algo == 'acktr':
         agent = algo.A2C_ACKTR(actor_critic, args.value_loss_coef,
@@ -179,7 +224,6 @@ def main():
 
     start = time.time()
     for j in range(num_updates):
-
         if args.use_linear_lr_decay:
             # decrease learning rate linearly
             if args.algo == "acktr":
@@ -232,6 +276,8 @@ def main():
                 reward_robot2 = torch.tensor([[info['reward_robot2']] for info in infos])
             else:
                 obs, reward, done, infos = envs.step(action)
+
+            # TODO: Train: ARPL
 
             for i, info in enumerate(infos):
                 if 'episode' in info.keys():
@@ -392,6 +438,9 @@ def main():
                         eval_reward_list_robot2[i].append(info['reward_robot2'])
                 else:
                     obs, reward, done, infos = eval_envs.step(action)
+
+                # Evalution: Test for ARPL
+
 
                 eval_masks = torch.FloatTensor([[0.0] if done_ else [1.0]
                                                 for done_ in done])

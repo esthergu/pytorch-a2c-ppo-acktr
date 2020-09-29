@@ -6,6 +6,10 @@ def get_args():
                         help='algorithm to use: a2c | ppo | acktr')
     parser.add_argument('--lr', type=float, default=3e-4,
                         help='learning rate (default: 3e-4)')
+    parser.add_argument('--phi', type=float, default=1e-1,
+                        help='ARPL perturbation prob (default: 1e-1)')
+    parser.add_argument("--beta", type=float, default=1.,
+                    help="Weight of the Kl divergence (bottleneck) or L2A")
     parser.add_argument('--eps', type=float, default=1e-5,
                         help='RMSprop optimizer epsilon (default: 1e-5)')
     parser.add_argument('--alpha', type=float, default=0.99,
