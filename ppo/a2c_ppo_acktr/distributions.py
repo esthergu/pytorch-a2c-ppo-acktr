@@ -66,22 +66,24 @@ class Categorical(nn.Module):
 
 
 class DiagGaussian(nn.Module):
-    def __init__(self, num_inputs, num_outputs):
+    def __init__(self, obs_num_inputs, num_inputs, num_outputs):
         super(DiagGaussian, self).__init__()
 
         init_ = lambda m: init(m,
             nn.init.orthogonal_,
             lambda x: nn.init.constant_(x, 0))
 
-        self.fc_mean = init_(nn.Linear(num_inputs, num_outputs))
+        self.fc_linear_l = init_(nn.Linear(obs_num_inputs, num_outputs))
+        self.fc_linear_n = init_(nn.Linear(num_inputs, num_outputs))
+        # self.fc_linear = init_(nn.Linear(num_inputs, num_outputs))
         self.logstd = AddBias(torch.zeros(num_outputs))
 
-    def forward(self, x):
-        action_mean = self.fc_mean(x)
-
+    def forward(self, x_n, x_l):
+        action_mean = self.fc_linear_n(x_n) + self.fc_linear_l(x_l)
+        # print(action_mean)
         #  An ugly hack for my KFAC implementation.
         zeros = torch.zeros(action_mean.size())
-        if x.is_cuda:
+        if x_n.is_cuda and x_l.is_cuda:
             zeros = zeros.cuda()
 
         action_logstd = self.logstd(zeros)
