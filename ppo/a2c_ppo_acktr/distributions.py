@@ -74,7 +74,7 @@ class DiagGaussian(nn.Module):
             lambda x: nn.init.constant_(x, 0))
 
         self.fc_linear_l = init_(nn.Linear(obs_num_inputs, num_outputs))
-        self.fc_linear_n = init_(nn.Linear(num_inputs, num_outputs))
+        self.fc_linear_n = init_(nn.Linear(num_inputs, num_outputs, 0))
         # self.fc_linear = init_(nn.Linear(num_inputs, num_outputs))
         self.logstd = AddBias(torch.zeros(num_outputs))
 
