@@ -252,6 +252,7 @@ def main():
             adv_obs = torch.empty_like(obs)
             if args.adv_type != 0:
                 flag = np.float(np.random.choice([0, 1], p=[1-args.phi, args.phi]))
+                # print(flag)
                 if flag:
                     if dual_robots:
                         obs_tensor_robot1 = torch.tensor(obs_robot1, requires_grad=True)
@@ -290,7 +291,7 @@ def main():
                         noise = torch.randn_like(obs) * noise_factor
                         # print(noise)
                         # adv_obs = obs + noise
-                        obs += noise
+                        obs += noise.sign() * args.step_eps
             # else:
             #     if dual_robots:
             #         adv_obs_robot1 = obs_robot1
@@ -456,6 +457,7 @@ def main():
                 adv_obs = torch.empty_like(obs)
                 if args.adv_type != 0:
                     flag = np.float(np.random.choice([0, 1], p=[1-args.phi, args.phi]))
+                    print(flag)
                     if flag:
                         if dual_robots:
                             obs_tensor_robot1 = torch.tensor(obs_robot1, requires_grad=True)
@@ -489,8 +491,9 @@ def main():
                             # else:
                             noise_factor = np.sqrt(2 * args.step_eps)
                             noise = torch.randn_like(obs) * noise_factor
+                            # print(noise)
                             # adv_obs = obs + noise
-                            obs += noise
+                            obs += noise.sign() * args.step_eps
                 # else:
                 #     if dual_robots:
                 #         adv_obs_robot1 = obs_robot1
