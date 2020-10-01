@@ -6,6 +6,14 @@ def get_args():
                         help='algorithm to use: a2c | ppo | acktr')
     parser.add_argument('--lr', type=float, default=3e-4,
                         help='learning rate (default: 3e-4)')
+    parser.add_argument('--adv-type', type=int, default=0,
+                        help='ARPL perturbation type (default: 0)')
+    parser.add_argument('--step-eps', type=float, default=0.075,
+                        help='ARPL perturbation step eps (default: 0.075)')
+    parser.add_argument('--phi', type=float, default=1e-1,
+                        help='ARPL perturbation prob (default: 1e-1)')
+    parser.add_argument('--epsilon', type=float, default=1e-2,
+                        help='ARPL perturbation strength (default: 1e-2)')
     parser.add_argument('--eps', type=float, default=1e-5,
                         help='RMSprop optimizer epsilon (default: 1e-5)')
     parser.add_argument('--alpha', type=float, default=0.99,
