@@ -289,19 +289,20 @@ def main():
                         noise_factor = np.sqrt(2 * args.step_eps)
                         noise = torch.randn_like(obs) * noise_factor
                         # print(noise)
-                        adv_obs = obs + noise
-            else:
-                if dual_robots:
-                    adv_obs_robot1 = obs_robot1
-                    adv_obs_robot2 = obs_robot2
-                else:
-                    adv_obs = obs
+                        # adv_obs = obs + noise
+                        obs += noise
+            # else:
+            #     if dual_robots:
+            #         adv_obs_robot1 = obs_robot1
+            #         adv_obs_robot2 = obs_robot2
+            #     else:
+            #         adv_obs = obs
 
             if dual_robots:
-                rollouts_robot1.insert(adv_obs_robot1, recurrent_hidden_states_robot1, action_robot1, action_log_prob_robot1, value_robot1, reward_robot1, masks)
-                rollouts_robot2.insert(adv_obs_robot2, recurrent_hidden_states_robot2, action_robot2, action_log_prob_robot2, value_robot2, reward_robot2, masks)
+                rollouts_robot1.insert(obs_robot1, recurrent_hidden_states_robot1, action_robot1, action_log_prob_robot1, value_robot1, reward_robot1, masks)
+                rollouts_robot2.insert(obs_robot2, recurrent_hidden_states_robot2, action_robot2, action_log_prob_robot2, value_robot2, reward_robot2, masks)
             else:
-                rollouts.insert(adv_obs, recurrent_hidden_states, action, action_log_prob, value, reward, masks)
+                rollouts.insert(obs, recurrent_hidden_states, action, action_log_prob, value, reward, masks)
 
 
         if args.num_rollouts > 0 and (j % (args.num_rollouts // args.num_processes) != 0):
@@ -488,13 +489,14 @@ def main():
                             # else:
                             noise_factor = np.sqrt(2 * args.step_eps)
                             noise = torch.randn_like(obs) * noise_factor
-                            adv_obs = obs + noise
-                else:
-                    if dual_robots:
-                        adv_obs_robot1 = obs_robot1
-                        adv_obs_robot2 = obs_robot2
-                    else:
-                        adv_obs = obs
+                            # adv_obs = obs + noise
+                            obs += noise
+                # else:
+                #     if dual_robots:
+                #         adv_obs_robot1 = obs_robot1
+                #         adv_obs_robot2 = obs_robot2
+                #     else:
+                #         adv_obs = obs
 
 
                 reset_rewards = False
