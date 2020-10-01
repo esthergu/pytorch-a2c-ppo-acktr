@@ -178,6 +178,16 @@ def main():
             # Obser reward and next obs
             action = torch.cat((action_robot, action_human), dim=-1)
             obs, reward, done, infos = envs.step(action)
+
+            # Apply noise
+            if args.adv_type != 0:
+                flag = np.float(np.random.choice([0, 1], p=[1-args.phi, args.phi]))
+                # print(flag)
+                if flag:
+                    noise_factor = np.sqrt(2 * args.step_eps)
+                    noise = torch.randn_like(obs) * noise_factor
+                    obs += noise.sign() * args.step_eps
+
             obs_robot = obs[:, :obs_robot_len]
             obs_human = obs[:, obs_robot_len:]
 
@@ -280,6 +290,15 @@ def main():
                 # Obser reward and next obs
                 action = torch.cat((action_robot, action_human), dim=-1)
                 obs, reward, done, infos = eval_envs.step(action)
+                # Apply noise
+                if args.adv_type != 0:
+                    flag = np.float(np.random.choice([0, 1], p=[1-args.phi, args.phi]))
+                    # print(flag)
+                    if flag:
+                        noise_factor = np.sqrt(2 * args.step_eps)
+                        noise = torch.randn_like(obs) * noise_factor
+                        obs += noise.sign() * args.step_epss
+
                 obs_robot = obs[:, :obs_robot_len]
                 obs_human = obs[:, obs_robot_len:]
 
