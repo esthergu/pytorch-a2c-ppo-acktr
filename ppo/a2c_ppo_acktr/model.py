@@ -57,39 +57,13 @@ class Policy(nn.Module):
         raise NotImplementedError
 
     def act(self, inputs, rnn_hxs, masks, deterministic=False):
-        # Non-linear 
         value, actor_features, rnn_hxs = self.base(inputs, rnn_hxs, masks)
-        # print("scn debug: ", inputs.shape, actor_features.shape)
-        # actor_features += inputs
-
         dist = self.dist(actor_features, inputs)
 
         if deterministic:
             action = dist.mode()
         else:
             action = dist.sample()
-
-        # Linear mode(SCN)
-        # flat_input = tf.reshape(self.X, [-1,self.grid_size * self.grid_size * self.num_state_frames])
-        #     K = tf.Variable(tf.random_uniform([self.grid_size * self.grid_size * self.num_state_frames, self.num_act]))
-
-
-        #     lin_output = tf.matmul(flat_input, K)
-        # print("scn debug: ", inputs.shape)
-
-        # # flat_inputs = torch.flatten(inputs)
-        # # flat_inputs_test = torch.reshape(inputs, (-1, 12*30))
-        # print(action.shape)
-        # K = torch.randn(inputs.shape[1], action.shape[1], requires_grad=True)
-        # print("Kkkkkkkkkkkkkkkkkk")
-        # print(K)
-        # # K = torch.tensor(np.random_uniform([12*30, action.shape]), requires_grad=True)
-        # print("scn k: ", K.shape)
-        # # action_l = torch.matmul(inputs, K).clamp(-clip_param, clip_param)
-        # print(action, action_l)
-        # action += action_l
-        # print(action)
-
         action_log_probs = dist.log_probs(action)
         dist_entropy = dist.entropy().mean()
 

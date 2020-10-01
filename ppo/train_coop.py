@@ -180,9 +180,9 @@ def main():
             obs, reward, done, infos = envs.step(action)
 
             # Apply noise
-            print("reward bug: ")
-            print(obs_robot, obs_human)
-            print(action)
+            # print("reward bug: ")
+            # print(obs_robot, obs_human)
+            # print(action)
             if args.adv_type != 0:
                 flag = np.float(np.random.choice([0, 1], p=[1-args.phi, args.phi]))
                 # print(flag)
@@ -291,9 +291,6 @@ def main():
                         obs_human, eval_recurrent_hidden_states_human, eval_masks, deterministic=True)
 
                 # Obser reward and next obs
-                print("reward bug: ")
-                print(obs_robot, obs_human)
-                print(action)
                 action = torch.cat((action_robot, action_human), dim=-1)
                 obs, reward, done, infos = eval_envs.step(action)
                 # Apply noise
