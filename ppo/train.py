@@ -271,25 +271,25 @@ def main():
                         obs_robot1 += epsilon * obs_grad_robot1
                         obs_robot2 += epsilon * obs_grad_robot2
                     else:
-                        obs_tensor = obs.clone().detach().requires_grad_(True)
-                        _, action_arpl, _, _ = actor_critic.act(
-                                obs_tensor, recurrent_hidden_states, masks, deterministic=True)
-                        norm = torch.norm(action_arpl, p=2, dim=1)
-                        # print(norm)
-                        norm = norm.sum()
-                        # print(norm)
-                        norm.backward()
-                        val = args.epsilon * obs_tensor.grad.data.numpy()[0]
-                        # print(obs_tensor.grad.data.numpy())
-                        # print(val.shape)
-                        if args.adv_type == 1:
-                            adv_obs = obs + torch.randn_like(obs) * val 
-                        else:
+                        # obs_tensor = obs.clone().detach().requires_grad_(True)
+                        # _, action_arpl, _, _ = actor_critic.act(
+                        #         obs_tensor, recurrent_hidden_states, masks, deterministic=True)
+                        # norm = torch.norm(action_arpl, p=2, dim=1)
+                        # # print(norm)
+                        # norm = norm.sum()
+                        # # print(norm)
+                        # norm.backward()
+                        # val = args.epsilon * obs_tensor.grad.data.numpy()[0]
+                        # # print(obs_tensor.grad.data.numpy())
+                        # # print(val.shape)
+                        # if args.adv_type == 1:
+                        #     adv_obs = obs + torch.randn_like(obs) * val 
+                        # else:
                             # print("?")
-                            noise_factor = np.sqrt(2 * args.step_eps)
-                            noise = torch.randn_like(obs) * noise_factor
-                            # print(noise)
-                            adv_obs = obs + noise
+                        noise_factor = np.sqrt(2 * args.step_eps)
+                        noise = torch.randn_like(obs) * noise_factor
+                        # print(noise)
+                        adv_obs = obs + noise
             else:
                 if dual_robots:
                     adv_obs_robot1 = obs_robot1
