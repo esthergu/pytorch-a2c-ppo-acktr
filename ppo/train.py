@@ -248,57 +248,6 @@ def main():
             masks = torch.FloatTensor([[0.0] if done_ else [1.0]
                                        for done_ in done])
 
-            # ARPL
-            adv_obs = torch.empty_like(obs)
-            if args.adv_type != 0:
-                flag = np.float(np.random.choice([0, 1], p=[1-args.phi, args.phi]))
-                # print(flag)
-                if flag:
-                    if dual_robots:
-                        obs_tensor_robot1 = torch.tensor(obs_robot1, requires_grad=True)
-                        obs_tensor_robot2 = torch.tensor(obs_robot2, requires_grad=True)
-                        _, action_arpl_robot1, _, _ = actor_critic_robot1.act(
-                                    obs_tensor_robot1, recurrent_hidden_states_robot1, masks, deterministic=True)
-                        _, action_arpl_robot2, _, _ = actor_critic_robot2.act(
-                                    obs_tensor_robot2, recurrent_hidden_states_robot2, masks, deterministic=True)
-
-                        norm_robot1 = torch.norm(action_arpl_robot1, p=2, dim=1)
-                        norm_robot1.backward()
-                        norm_robot2 = torch.norm(action_arpl_robot2, p=2, dim=1)
-                        norm_robot2.backward()
-
-                        obs_grad_robot1 = obs_tensor_robot1.grad
-                        obs_grad_robot2 = obs_tensor_robot2.grad
-                        obs_robot1 += epsilon * obs_grad_robot1
-                        obs_robot2 += epsilon * obs_grad_robot2
-                    else:
-                        # obs_tensor = obs.clone().detach().requires_grad_(True)
-                        # _, action_arpl, _, _ = actor_critic.act(
-                        #         obs_tensor, recurrent_hidden_states, masks, deterministic=True)
-                        # norm = torch.norm(action_arpl, p=2, dim=1)
-                        # # print(norm)
-                        # norm = norm.sum()
-                        # # print(norm)
-                        # norm.backward()
-                        # val = args.epsilon * obs_tensor.grad.data.numpy()[0]
-                        # # print(obs_tensor.grad.data.numpy())
-                        # # print(val.shape)
-                        # if args.adv_type == 1:
-                        #     adv_obs = obs + torch.randn_like(obs) * val 
-                        # else:
-                            # print("?")
-                        noise_factor = np.sqrt(2 * args.step_eps)
-                        noise = torch.randn_like(obs) * noise_factor
-                        # print(noise)
-                        # adv_obs = obs + noise
-                        obs += noise.sign() * args.step_eps
-            # else:
-            #     if dual_robots:
-            #         adv_obs_robot1 = obs_robot1
-            #         adv_obs_robot2 = obs_robot2
-            #     else:
-            #         adv_obs = obs
-
             if dual_robots:
                 rollouts_robot1.insert(obs_robot1, recurrent_hidden_states_robot1, action_robot1, action_log_prob_robot1, value_robot1, reward_robot1, masks)
                 rollouts_robot2.insert(obs_robot2, recurrent_hidden_states_robot2, action_robot2, action_log_prob_robot2, value_robot2, reward_robot2, masks)
@@ -452,55 +401,6 @@ def main():
 
                 eval_masks = torch.FloatTensor([[0.0] if done_ else [1.0]
                                                 for done_ in done])
-
-                # ARPL
-                adv_obs = torch.empty_like(obs)
-                if args.adv_type != 0:
-                    flag = np.float(np.random.choice([0, 1], p=[1-args.phi, args.phi]))
-                    print(flag)
-                    if flag:
-                        if dual_robots:
-                            obs_tensor_robot1 = torch.tensor(obs_robot1, requires_grad=True)
-                            obs_tensor_robot2 = torch.tensor(obs_robot2, requires_grad=True)
-                            _, action_arpl_robot1, _, _ = actor_critic_robot1.act(
-                                        obs_tensor_robot1, eval_recurrent_hidden_states_robot1, eval_masks, deterministic=True)
-                            _, action_arpl_robot2, _, _ = actor_critic_robot2.act(
-                                        obs_tensor_robot2, eval_recurrent_hidden_states_robot2, eval_masks, deterministic=True)
-
-                            norm_robot1 = torch.norm(action_arpl_robot1, p=2, dim=1)
-                            norm_robot1.backward()
-                            norm_robot2 = torch.norm(action_arpl_robot2, p=2, dim=1)
-                            norm_robot2.backward()
-
-                            obs_grad_robot1 = obs_tensor_robot1.grad
-                            obs_grad_robot2 = obs_tensor_robot2.grad
-                            obs_robot1 += epsilon * obs_grad_robot1
-                            obs_robot2 += epsilon * obs_grad_robot2
-                        else:
-                            # obs_tensor = obs.clone().detach().requires_grad_(True)
-                            # _, action_arpl, _, _ = actor_critic.act(
-                            #         obs_tensor, eval_recurrent_hidden_states, eval_masks, deterministic=True)
-                            # norm = torch.norm(action_arpl, p=2, dim=1)
-                            # # print(norm)
-                            # norm = norm.sum()
-                            # # print(norm)
-                            # norm.backward()
-                            # val = args.epsilon * obs_tensor.grad.data.numpy()[0]
-                            # if args.adv_type == 1:
-                            #     adv_obs = obs + torch.randn_like(obs) * val 
-                            # else:
-                            noise_factor = np.sqrt(2 * args.step_eps)
-                            noise = torch.randn_like(obs) * noise_factor
-                            # print(noise)
-                            # adv_obs = obs + noise
-                            obs += noise.sign() * args.step_eps
-                # else:
-                #     if dual_robots:
-                #         adv_obs_robot1 = obs_robot1
-                #         adv_obs_robot2 = obs_robot2
-                #     else:
-                #         adv_obs = obs
-
 
                 reset_rewards = False
                 for info in infos:
