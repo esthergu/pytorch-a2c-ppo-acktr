@@ -114,7 +114,7 @@ def main():
                 base_kwargs={'recurrent': args.recurrent_policy})
         else:
             actor_critic = Policy(envs.observation_space.shape, envs.action_space,
-                base_kwargs={'recurrent': args.recurrent_policy})
+                base_kwargs={'recurrent': args.recurrent_policy, 'hidden_size': args.hidden_size})
     if dual_robots:
         actor_critic_robot1.to(device)
         actor_critic_robot2.to(device)

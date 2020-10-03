@@ -8,6 +8,8 @@ def get_args():
                         help='learning rate (default: 3e-4)')
     parser.add_argument('--adv-type', type=int, default=0,
                         help='ARPL perturbation type (default: 0)')
+    parser.add_argument('--hidden-size', type=int, default=64,
+                        help='Hidden Size (default: 64)')
     parser.add_argument('--step-eps', type=float, default=0.075,
                         help='ARPL perturbation step eps (default: 0.075)')
     parser.add_argument('--phi', type=float, default=1e-1,

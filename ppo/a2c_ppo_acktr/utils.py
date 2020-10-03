@@ -46,6 +46,9 @@ def update_linear_schedule(optimizer, epoch, total_num_epochs, initial_lr):
         param_group['lr'] = lr
 
 def init(module, weight_init, bias_init, gain=1):
+    # print("gain: ", gain)
+    # print(weight_init)
+    # print(bias_init)
     weight_init(module.weight.data, gain=gain)
     if module.bias != None:
         bias_init(module.bias.data)

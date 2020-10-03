@@ -26,6 +26,7 @@ if args.recurrent_policy:
         'Recurrent policy is not implemented for ACKTR'
 
 if args.num_rollouts > 0:
+    # print(args.num_rollouts, args.num_processes)
     assert args.num_rollouts % args.num_processes == 0, 'num_rollouts must be divisable by num_processes'
 
 num_updates = int(args.num_env_steps) // args.num_steps // args.num_processes
@@ -105,9 +106,9 @@ def main():
             vec_norm.ob_rms = ob_rms
     else:
         actor_critic_robot = Policy([obs_robot_len], action_space_robot,
-            base_kwargs={'recurrent': args.recurrent_policy})
+            base_kwargs={'recurrent': args.recurrent_policy, 'hidden_size': args.hidden_size}) 
         actor_critic_human = Policy([obs_human_len], action_space_human,
-            base_kwargs={'recurrent': args.recurrent_policy})
+            base_kwargs={'recurrent': args.recurrent_policy, 'hidden_size': args.hidden_size})
     actor_critic_robot.to(device)
     actor_critic_human.to(device)
 
