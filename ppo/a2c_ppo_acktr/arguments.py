@@ -6,6 +6,8 @@ def get_args():
                         help='algorithm to use: a2c | ppo | acktr')
     parser.add_argument('--lr', type=float, default=3e-4,
                         help='learning rate (default: 3e-4)')
+    parser.add_argument('--test-type', type=int, default=0,
+                        help='Test with different types of noise (default: 0)')
     parser.add_argument('--adv-type', type=int, default=0,
                         help='ARPL perturbation type (default: 0)')
     parser.add_argument('--hidden-size', type=int, default=64,

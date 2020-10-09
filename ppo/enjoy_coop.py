@@ -25,6 +25,8 @@ parser.add_argument('--add-timestep', action='store_true', default=False,
                     help='add timestep to observations')
 parser.add_argument('--non-det', action='store_true', default=False,
                     help='whether to use a non-deterministic policy')
+parser.add_argument('--test-type', type=int, default=0,
+                        help='Test with different types of noise (default: 0)')
 args = parser.parse_args()
 
 args.det = not args.non_det
@@ -81,6 +83,8 @@ while True:
     # Obser reward and next obs
     action = torch.cat((action_robot, action_human), dim=-1)
     obs, reward, done, _ = env.step(action)
+    if args.test_type != 0:
+        obs += np.random.normal(scale=0.05, size=len(obs))
     obs_robot = obs[:, :obs_robot_len]
     obs_human = obs[:, obs_robot_len:]
 
